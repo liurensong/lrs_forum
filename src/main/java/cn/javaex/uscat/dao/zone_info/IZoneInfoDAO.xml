@@ -1,0 +1,97 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.zone_info.IZoneInfoDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="ZoneInfoMap" type="cn.javaex.uscat.view.ZoneInfo">
+		<result column="gid" property="gid" />
+		<result column="sort" property="sort" />
+		<result column="name" property="name" />
+		<result column="color" property="color" />
+		<result column="row" property="row" />
+		<result column="is_show" property="isShow" />
+		<result column="title" property="title" />
+		<result column="keywords" property="keywords" />
+		<result column="description" property="description" />
+	</resultMap>
+	
+	<!-- 查询分区列表 -->
+	<select id="list" resultMap="ZoneInfoMap">
+		SELECT
+			*
+		FROM
+			zone_info
+		ORDER BY
+			sort
+	</select>
+	
+	<!-- 查询所有可见分区列表 -->
+	<select id="listShow" resultMap="ZoneInfoMap">
+		SELECT
+			*
+		FROM
+			zone_info
+		WHERE
+			is_show = '1'
+		ORDER BY
+			sort
+	</select>
+	
+	<!-- 根据主键查询分区详细信息 -->
+	<select id="selectById" resultMap="ZoneInfoMap">
+		SELECT
+			*
+		FROM
+			zone_info
+		WHERE
+			gid = #{gid}
+	</select>
+	
+	<!-- 插入新的用户组 -->
+	<insert id="insert">
+		INSERT INTO zone_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="sort!=null and sort!=''">sort,</if>
+			<if test="name!=null and name!=''">name,</if>
+			<if test="color!=null and color!=''">color,</if>
+			<if test="row!=null and row!=''">row,</if>
+			<if test="isShow!=null and isShow!=''">is_show,</if>
+			<if test="title!=null and title!=''">title,</if>
+			<if test="keywords!=null and keywords!=''">keywords,</if>
+			<if test="description!=null and description!=''">description,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="sort!=null and sort!=''">#{sort},</if>
+			<if test="name!=null and name!=''">#{name},</if>
+			<if test="color!=null and color!=''">#{color},</if>
+			<if test="row!=null and row!=''">#{row},</if>
+			<if test="isShow!=null and isShow!=''">#{isShow},</if>
+			<if test="title!=null and title!=''">#{title},</if>
+			<if test="keywords!=null and keywords!=''">#{keywords},</if>
+			<if test="description!=null and description!=''">#{description},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新分区 -->
+	<update id="update">
+		UPDATE zone_info
+		<set>
+			<if test="sort!=null">sort=#{sort},</if>
+			<if test="name!=null">name=#{name},</if>
+			<if test="color!=null">color=#{color},</if>
+			<if test="row!=null">row=#{row},</if>
+			<if test="isShow!=null">is_show=#{isShow},</if>
+			<if test="title!=null">title=#{title},</if>
+			<if test="keywords!=null">keywords=#{keywords},</if>
+			<if test="description!=null">description=#{description},</if>
+		</set>
+		WHERE gid = #{gid}
+	</update>
+	
+	<!-- 根据分区Id删除分区 -->
+	<delete id="deleteById">
+		DELETE FROM zone_info WHERE gid = #{gid}
+	</delete>
+</mapper>

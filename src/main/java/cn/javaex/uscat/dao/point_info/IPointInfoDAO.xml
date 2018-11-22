@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.point_info.IPointInfoDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="PointInfoMap" type="cn.javaex.uscat.view.PointInfo">
+		<result column="id" property="id" />
+		<result column="var_name" property="varName" />
+		<result column="name" property="name" />
+		<result column="conversion_ratio" property="conversionRatio" />
+		<result column="is_use" property="isUse" />
+	</resultMap>
+	
+	<!-- 查询积分列表 -->
+	<select id="list" resultMap="PointInfoMap">
+		SELECT
+			*
+		FROM
+			point_info
+		WHERE
+			1 = 1
+		<if test="isUse!=null and isUse!=''">
+			AND is_use = #{isUse}
+		</if>
+		ORDER BY
+			id
+	</select>
+	
+	<!-- 更新积分表 -->
+	<update id="update">
+		UPDATE point_info
+		<set>
+			<if test="name!=null">name=#{name},</if>
+			<if test="conversionRatio!=null">conversion_ratio=#{conversionRatio},</if>
+			<if test="isUse!=null">is_use=#{isUse},</if>
+		</set>
+		WHERE var_name = #{varName}
+	</update>
+</mapper>

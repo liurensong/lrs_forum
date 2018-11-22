@@ -1,0 +1,633 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.thread_info.IThreadInfoDAO">
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="ThreadInfoMap" type="cn.javaex.uscat.view.ThreadInfo">
+		<result column="tid" property="tid" />
+		<result column="fid" property="fid" />
+		<result column="subject_id" property="subjectId" />
+		<result column="title" property="title" />
+		<result column="create_time" property="createTime" />
+		<result column="create_user_id" property="createUserId" />
+		<result column="status" property="status" />
+		<result column="view_count" property="viewCount" />
+		<result column="view_count_day" property="viewCountDay" />
+		<result column="view_count_week" property="viewCountWeek" />
+		<result column="view_count_month" property="viewCountMonth" />
+		<result column="is_top" property="isTop" />
+		<result column="is_digest" property="isDigest" />
+		<result column="last_edit_user_id" property="lastEditUserId" />
+		<result column="last_edit_time" property="lastEditTime" />
+		
+		<result column="login_name" property="loginName" />
+		<result column="avatar" property="avatar" />
+		<result column="user_status" property="userStatus" />
+		<result column="board_name" property="boardName" />
+		<result column="zone_name" property="zoneName" />
+		<result column="content_text" property="contentText" />
+	</resultMap>
+	
+	<!-- 根据主题id，查询主题信息（操作主题专用） -->
+	<select id="selectByTidForAdmin" resultMap="ThreadInfoMap">
+		SELECT
+			tid,
+			is_digest,
+			create_user_id
+		FROM
+			thread_info
+		WHERE
+			tid = #{tid}
+	</select>
+	
+	<!-- 查询主题列表（后台管理专用） -->
+	<select id="list" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.title,
+			bi.name AS board_name,
+			zi.name AS zone_name,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.is_top,
+			ti.is_digest,
+			ti.view_count,
+			ui.login_name,
+			ui.status AS user_status
+		FROM
+			thread_info ti,
+			board_info bi,
+			zone_info zi,
+			user_info ui
+		WHERE
+			ti.fid = bi.fid
+		AND bi.gid = zi.gid
+		AND ti.create_user_id = ui.id
+		<if test="gid!=null and gid!=''">
+			AND zi.gid = #{gid}
+		</if>
+		<if test="fid!=null and fid!=''">
+			AND ti.fid = #{fid}
+		</if>
+		<if test="status!=null and status!=''">
+			AND ti.status = #{status}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			AND ti.title LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+		ORDER BY
+			ti.create_time DESC
+	</select>
+	
+	<!-- 查询用户的主题 -->
+	<select id="listByUserId" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.title,
+			ti.fid,
+			ti.status,
+			ti.view_count,
+			bi.name AS board_name,
+			ui.status AS user_status
+		FROM
+			thread_info ti,
+			board_info bi,
+			user_info ui
+		WHERE
+			ti.fid = bi.fid
+		AND ti.create_user_id = ui.id
+		AND ti.create_user_id = #{createUserId}
+		ORDER BY
+			ti.create_time DESC
+	</select>
+	
+	<!-- 查询用户回帖记录 -->
+	<select id="listByReplyUserId" resultMap="ThreadInfoMap">
+		SELECT DISTINCT
+			ti.tid,
+			ti.title,
+			ti.fid,
+			ti.status,
+			ti.view_count,
+			bi.name AS board_name,
+			ui.status AS user_status
+		FROM
+			thread_info ti,
+			thread_reply_info tri,
+			board_info bi,
+			user_info ui
+		WHERE
+			ti.tid = tri.tid
+		AND tri.reply_user_id = #{replyUserId}
+		AND tri.floor != '1'
+		AND ti.fid = bi.fid
+		AND ti.create_user_id = ui.id
+		ORDER BY
+			ti.create_time DESC
+	</select>
+	
+	<!-- 查询置顶主题（按最后编辑时间倒序排列） -->
+	<select id="listTopByForumdisplay" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.subject_id,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		AND ti.fid = #{fid}
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND ti.is_top = '1'
+		ORDER BY
+			ti.last_edit_time DESC
+	</select>
+	
+	<!-- 查询精华主题（按最后编辑时间倒序排列） -->
+	<select id="listDigestByForumdisplay" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.subject_id,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		AND ti.fid = #{fid}
+		AND ti.is_digest = '1'
+		AND ti.status = '1'
+		AND ui.status = '1'
+		ORDER BY
+			ti.last_edit_time DESC
+	</select>
+	
+	<!-- 查询某个板块下的帖子列表（排序字段为主题创建时间或主题浏览次数） -->
+	<select id="listByForumdisplay" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.subject_id,
+			ti.title,
+			ti.create_user_id,
+			ti.is_digest,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		AND ti.fid = #{fid}
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND IFNULL(ti.is_top, '') != '1'
+		<if test="subjectId!=null and subjectId!=''">
+			AND ti.subject_id = #{subjectId}
+		</if>
+		<if test="defaultOrderField=='create_time' or defaultOrderField=='view_count'">
+			ORDER BY
+				${defaultOrderField} DESC
+		</if>
+	</select>
+	
+	<!-- 查询某个板块下的帖子列表（排序字段为帖子回复时间） -->
+	<select id="listByReplyTime" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.subject_id,
+			ti.title,
+			ti.create_user_id,
+			ti.is_digest,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			thread_reply_info tri,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			tri.tid = ti.tid
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		AND IFNULL(ti.is_top, '') != '1'
+		AND ti.fid = #{fid}
+		<if test="subjectId!=null and subjectId!=''">
+			AND ti.subject_id = #{subjectId}
+		</if>
+		GROUP BY
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			ti.create_time,
+			ti.view_count
+		ORDER BY
+			MAX(tri.reply_time) DESC
+	</select>
+	
+	<!-- 查询某个板块下的帖子列表（排序字段为帖子回复数量） -->
+	<select id="listByReplyCount" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.subject_id,
+			ti.title,
+			ti.create_user_id,
+			ti.is_digest,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			thread_reply_info tri,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			tri.tid = ti.tid
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		AND IFNULL(ti.is_top, '') != '1'
+		AND ti.fid = #{fid}
+		<if test="subjectId!=null and subjectId!=''">
+			AND ti.subject_id = #{subjectId}
+		</if>
+		GROUP BY
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			ti.create_time,
+			ti.view_count
+		ORDER BY
+			COUNT(tri.tid) DESC
+	</select>
+	
+	<!-- 查询主题列表（排序字段为主题创建时间或主题浏览次数，api接口专用） -->
+	<select id="apiListByOrderField" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		AND ti.status = '1'
+		AND ui.status = '1'
+		<if test="fid!=null and fid!=''">
+			AND ti.fid IN
+			<foreach collection="fidArr" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		<if test="defaultOrderField=='create_time'">
+			ORDER BY
+				ti.create_time DESC
+		</if>
+		<if test="defaultOrderField=='view_count'">
+			<if test="cycle=='7'">
+				ORDER BY
+					ti.view_count_week DESC
+			</if>
+			<if test="cycle=='30'">
+				ORDER BY
+					ti.view_count_month DESC
+			</if>
+			<if test="cycle=='0'">
+				ORDER BY
+					ti.view_count DESC
+			</if>
+		</if>
+		LIMIT ${num}
+	</select>
+	
+	<!-- 查询主题列表（排序字段为帖子回复时间，api接口专用） -->
+	<select id="apiListByReplyTime" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			thread_reply_info tri,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			tri.tid = ti.tid
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		<if test="fid!=null and fid!=''">
+			AND ti.fid IN
+			<foreach collection="fidArr" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			ti.create_time,
+			ti.view_count
+		ORDER BY
+			MAX(tri.reply_time) DESC
+		LIMIT ${num}
+	</select>
+	
+	<!-- 查询主题列表（排序字段为帖子回复数量，api接口专用） -->
+	<select id="apiListByReplyCount" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d') AS create_time,
+			ti.view_count,
+			ui.login_name,
+			upi.avatar
+		FROM
+			thread_info ti,
+			thread_reply_info tri,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			tri.tid = ti.tid
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND ti.create_user_id = ui.id
+		AND ui.id = upi.user_id
+		<if test="cycle!=null and cycle!='' and cycle!='0'">
+			AND DATE_SUB(CURDATE(), INTERVAL ${cycle} DAY) &lt;= date(tri.reply_time)
+		</if>
+		<if test="fid!=null and fid!=''">
+			AND ti.fid IN
+			<foreach collection="fidArr" index="index" item="item" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+		GROUP BY
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			ti.create_time,
+			ti.view_count
+		ORDER BY
+			COUNT(tri.tid) DESC
+		LIMIT ${num}
+	</select>
+	
+	<!-- 根据主题id，获取帖子主题信息（正常状态的） -->
+	<select id="selectByTid" resultMap="ThreadInfoMap">
+		SELECT
+			ti.tid,
+			ti.fid,
+			ti.subject_id,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i:%s') AS create_time,
+			ti.view_count,
+			ti.view_count_day,
+			ti.view_count_week,
+			ti.view_count_month,
+			ui.login_name
+		FROM
+			thread_info ti,
+			user_info ui
+		WHERE
+			ti.create_user_id = ui.id
+		AND ti.tid = #{tid}
+		AND ti.status = '1'
+		AND ui.status = '1'
+	</select>
+	
+	<!-- 根据用户id，查询用户发布的帖子数（主题数） -->
+	<select id="countByCreateUserId" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			thread_info
+		WHERE
+			create_user_id = #{createUserId}
+	</select>
+	
+	<!-- 根据板块id，查询主题总数 -->
+	<select id="countByFid" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			thread_info
+		WHERE
+			fid = #{fid}
+		AND status = '1'
+	</select>
+	
+	<!-- 根据板块id，查询回帖总数 -->
+	<select id="countThreadReplyByFid" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			thread_info ti,
+			thread_reply_info tri
+		WHERE
+			ti.tid = tri.tid
+		AND tri.floor != '1'
+		AND ti.fid = #{fid}
+		AND tri.status = '1'
+	</select>
+	
+	<!-- 根据板块id，查询今日帖子数量（主题+回帖） -->
+	<select id="countThreadCountTodayByFid" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			thread_info ti,
+			thread_reply_info tri
+		WHERE
+			ti.tid = tri.tid
+		AND ti.fid = #{fid}
+		AND TO_DAYS(tri.reply_time) = TO_DAYS(NOW())
+	</select>
+	
+	<!-- 搜索 -->
+	<select id="listBySearch" resultMap="ThreadInfoMap">
+		SELECT
+			ti.fid,
+			ti.tid,
+			ti.title,
+			ti.create_user_id,
+			DATE_FORMAT(ti.create_time, '%Y-%m-%d %H:%i') AS create_time,
+			ti.view_count,
+			tri.content_text,
+			ui.login_name,
+			bi.name AS board_name
+		FROM
+			thread_info ti,
+			board_info bi,
+			user_info ui,
+			(
+				SELECT
+					tid,
+					content_text
+				FROM
+					thread_reply_info
+				WHERE
+					floor = '1'
+			) tri
+		WHERE
+			ti.create_user_id = ui.id
+		AND ti.tid = tri.tid
+		AND ti.fid = bi.fid
+		AND ti.status = '1'
+		AND ui.status = '1'
+		AND (ti.title LIKE CONCAT('%', #{keyword}, '%') OR tri.content_text LIKE CONCAT('%', #{keyword}, '%'))
+		ORDER BY
+			ti.create_time DESC
+	</select>
+	
+	<!-- 发布新的主题 -->
+	<insert id="insert">
+		INSERT INTO thread_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">fid,</if>
+			<if test="subjectId!=null and subjectId!=''">subject_id,</if>
+			<if test="title!=null and title!=''">title,</if>
+			<if test="createTime!=null and createTime!=''">create_time,</if>
+			<if test="createUserId!=null and createUserId!=''">create_user_id,</if>
+			<if test="status!=null and status!=''">status,</if>
+			<if test="viewCount!=null and viewCount!=''">view_count,</if>
+			<if test="viewCountDay!=null and viewCountDay!=''">view_count_day,</if>
+			<if test="viewCountWeek!=null and viewCountWeek!=''">view_count_week,</if>
+			<if test="viewCountMonth!=null and viewCountMonth!=''">view_count_month,</if>
+			<if test="isTop!=null and isTop!=''">is_top,</if>
+			<if test="isDigest!=null and isDigest!=''">is_digest,</if>
+			<if test="lastEditUserId!=null and lastEditUserId!=''">last_edit_user_id,</if>
+			<if test="lastEditTime!=null and lastEditTime!=''">last_edit_time,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">#{fid},</if>
+			<if test="subjectId!=null and subjectId!=''">#{subjectId},</if>
+			<if test="title!=null and title!=''">#{title},</if>
+			<if test="createTime!=null and createTime!=''">#{createTime},</if>
+			<if test="createUserId!=null and createUserId!=''">#{createUserId},</if>
+			<if test="status!=null and status!=''">#{status},</if>
+			<if test="viewCount!=null and viewCount!=''">#{viewCount},</if>
+			<if test="viewCountDay!=null and viewCountDay!=''">#{viewCountDay},</if>
+			<if test="viewCountWeek!=null and viewCountWeek!=''">#{viewCountWeek},</if>
+			<if test="viewCountMonth!=null and viewCountMonth!=''">#{viewCountMonth},</if>
+			<if test="isTop!=null and isTop!=''">#{isTop},</if>
+			<if test="isDigest!=null and isDigest!=''">#{isDigest},</if>
+			<if test="lastEditUserId!=null and lastEditUserId!=''">#{lastEditUserId},</if>
+			<if test="lastEditTime!=null and lastEditTime!=''">#{lastEditTime},</if>
+		</trim>
+		<selectKey keyProperty="tid" resultType="String">
+			<!-- 得到刚insert到数据表中的记录的主键值，只适用于自增主键 -->
+			SELECT LAST_INSERT_ID() AS tid
+		</selectKey>
+	</insert>
+	
+	<!-- 更新主题内容 -->
+	<update id="update">
+		UPDATE thread_info
+		<set>
+			<if test="fid!=null">fid=#{fid},</if>
+			<if test="subjectId!=null">subject_id=#{subjectId},</if>
+			<if test="title!=null">title=#{title},</if>
+			<if test="status!=null">status=#{status},</if>
+			<if test="viewCount!=null">view_count=#{viewCount},</if>
+			<if test="viewCountDay!=null">view_count_day=#{viewCountDay},</if>
+			<if test="viewCountWeek!=null">view_count_week=#{viewCountWeek},</if>
+			<if test="viewCountMonth!=null">view_count_month=#{viewCountMonth},</if>
+			<if test="isTop!=null">is_top=#{isTop},</if>
+			<if test="isDigest!=null">is_digest=#{isDigest},</if>
+			<if test="lastEditUserId!=null">last_edit_user_id=#{lastEditUserId},</if>
+			<if test="lastEditTime!=null">last_edit_time=#{lastEditTime},</if>
+		</set>
+		WHERE tid = #{tid}
+	</update>
+	
+	<!-- 清空主题浏览量 -->
+	<update id="clearViewCount">
+		UPDATE thread_info
+		<set>
+			<if test="viewCountDay!=null">view_count_day=#{viewCountDay},</if>
+			<if test="viewCountWeek!=null">view_count_week=#{viewCountWeek},</if>
+			<if test="viewCountMonth!=null">view_count_month=#{viewCountMonth},</if>
+		</set>
+	</update>
+	
+	<!-- 删除用户的主题记录 -->
+	<delete id="deleteByUserIdArr">
+		DELETE FROM thread_info WHERE create_user_id IN
+		<foreach collection="userIdArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 批量更新状态 -->
+	<update id="batchUpdate">
+		UPDATE thread_info 
+		<set>
+			<if test="status!=null">status=#{status},</if>
+		</set>
+		WHERE tid IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 后台批量操作主题 -->
+	<update id="batchOpt">
+		UPDATE thread_info 
+		<set>
+			<if test="isTop!=null">is_top=#{isTop},</if>
+			<if test="isDigest!=null">is_digest=#{isDigest},</if>
+		</set>
+		WHERE tid IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 批量彻底删除主题 -->
+	<delete id="batchDelete">
+		DELETE FROM thread_info WHERE tid IN
+		<foreach collection="tidArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

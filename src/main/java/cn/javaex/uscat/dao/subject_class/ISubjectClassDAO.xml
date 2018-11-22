@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.subject_class.ISubjectClassDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="SubjectClassMap" type="cn.javaex.uscat.view.SubjectClass">
+		<result column="subject_id" property="subjectId" />
+		<result column="fid" property="fid" />
+		<result column="sort" property="sort" />
+		<result column="name_html" property="nameHtml" />
+		<result column="name_text" property="nameText" />
+		<result column="is_show" property="isShow" />
+	</resultMap>
+	
+	<!-- 根据板块id，查询其下所有分类 -->
+	<select id="listByFid" resultMap="SubjectClassMap">
+		SELECT
+			*
+		FROM
+			subject_class
+		WHERE
+			fid = #{fid}
+		ORDER BY
+			sort
+	</select>
+	
+	<!-- 根据板块id，查询该板块下的主题分类数量 -->
+	<select id="countByFid" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			subject_class
+		WHERE
+			fid = #{fid}
+	</select>
+	
+	<!-- 根据主键，查询主题分类名称（带html代码） -->
+	<select id="selectNameHtmlBySubjectId" resultType="String">
+		SELECT
+			name_html
+		FROM
+			subject_class
+		WHERE
+			subject_id = #{subjectId}
+	</select>
+	
+	<!-- 插入新的权限规则 -->
+	<insert id="insert">
+		INSERT INTO subject_class
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">fid,</if>
+			<if test="sort!=null and sort!=''">sort,</if>
+			<if test="nameHtml!=null and nameHtml!=''">name_html,</if>
+			<if test="nameText!=null and nameText!=''">name_text,</if>
+			<if test="isShow!=null and isShow!=''">is_show,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">#{fid},</if>
+			<if test="sort!=null and sort!=''">#{sort},</if>
+			<if test="nameHtml!=null and nameHtml!=''">#{nameHtml},</if>
+			<if test="nameText!=null and nameText!=''">#{nameText},</if>
+			<if test="isShow!=null and isShow!=''">#{isShow},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新权限规则 -->
+	<update id="update">
+		UPDATE subject_class
+		<set>
+			<if test="fid!=null">fid=#{fid},</if>
+			<if test="sort!=null">sort=#{sort},</if>
+			<if test="nameHtml!=null">name_html=#{nameHtml},</if>
+			<if test="nameText!=null">name_text=#{nameText},</if>
+			<if test="isShow!=null">is_show=#{isShow},</if>
+		</set>
+		WHERE subject_id = #{subjectId}
+	</update>
+	
+	<!-- 批量删除主题分类 -->
+	<delete id="delete">
+		DELETE FROM subject_class WHERE subject_id IN
+		<foreach collection="subjectIdArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

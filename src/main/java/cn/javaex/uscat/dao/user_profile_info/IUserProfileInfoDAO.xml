@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.user_profile_info.IUserProfileInfoDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="UserProfileInfoMap" type="cn.javaex.uscat.view.UserProfileInfo">
+		<result column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="group_id" property="groupId" />
+		<result column="avatar" property="avatar" />
+		
+		<result column="group_type" property="groupType" />
+	</resultMap>
+	
+	<!-- 查询指定用户组的数量 -->
+	<select id="countByGroupId" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			user_profile_info
+		WHERE
+			group_id = #{groupId}
+	</select>
+	
+	<!-- 根据用户id，查询用户扩展信息 -->
+	<select id="selectByUserId" resultMap="UserProfileInfoMap">
+		SELECT
+			upi.group_id,
+			gi.type AS group_type
+		FROM
+			user_profile_info upi,
+			group_info gi
+		WHERE
+			upi.group_id = gi.id
+		AND upi.user_id = #{userId}
+	</select>
+	
+	<!-- 注册新的用户扩展信息 -->
+	<insert id="insert">
+		INSERT INTO user_profile_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="userId!=null and userId!=''">user_id,</if>
+			<if test="groupId!=null and groupId!=''">group_id,</if>
+			<if test="avatar!=null and avatar!=''">avatar,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="userId!=null and userId!=''">#{userId},</if>
+			<if test="groupId!=null and groupId!=''">#{groupId},</if>
+			<if test="avatar!=null and avatar!=''">#{avatar},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新用户扩展信息 -->
+	<update id="update">
+		UPDATE user_profile_info
+		<set>
+			<if test="groupId!=null">group_id=#{groupId},</if>
+			<if test="avatar!=null">avatar=#{avatar},</if>
+		</set>
+		WHERE user_id = #{userId}
+	</update>
+	
+	<!-- 批量更新用户扩展信息 -->
+	<update id="batchUpdate">
+		UPDATE user_profile_info 
+		<set>
+			<if test="groupId!=null">group_id=#{groupId},</if>
+		</set>
+		WHERE user_id IN
+		<foreach collection="userIdArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+</mapper>

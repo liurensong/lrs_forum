@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.board_moderator.IBoardModeratorDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="BoardModeratorMap" type="cn.javaex.uscat.view.BoardModerator">
+		<result column="id" property="id" />
+		<result column="fid" property="fid" />
+		<result column="user_id" property="userId" />
+		
+		<result column="login_name" property="loginName" />
+		<result column="avatar" property="avatar" />
+	</resultMap>
+	
+	<!-- 查询板块下的版主 -->
+	<select id="listByFid" resultMap="BoardModeratorMap">
+		SELECT
+			bm.id,
+			bm.user_id,
+			ui.login_name,
+			upi.avatar
+		FROM
+			board_moderator bm,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			bm.user_id = ui.id
+		AND ui.id = upi.user_id
+		AND bm.fid = #{fid}
+		ORDER BY
+			bm.id
+	</select>
+	
+	<!-- 根据板块id、用户id，查询是否已有重复数据 -->
+	<select id="countByFidAndUserId" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			board_moderator
+		WHERE
+			fid = #{fid}
+		<if test="userId!=null and userId!=''">
+			AND user_id = #{userId}
+		</if>
+	</select>
+	
+	<!-- 根据主键id，查询超级版主记录 -->
+	<select id="selectById" resultMap="BoardModeratorMap">
+		SELECT
+			*
+		FROM
+			board_moderator
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 插入 -->
+	<insert id="insert">
+		INSERT INTO board_moderator
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">fid,</if>
+			<if test="userId!=null and userId!=''">user_id,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">#{fid},</if>
+			<if test="userId!=null and userId!=''">#{userId},</if>
+		</trim>
+	</insert>
+	
+	<!-- 删除当前板块下的所有数据 -->
+	<delete id="deleteByFid">
+		DELETE FROM board_moderator WHERE fid = #{fid}
+	</delete>
+	
+	<!-- 批量删除版主 -->
+	<delete id="delete">
+		DELETE FROM board_moderator WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

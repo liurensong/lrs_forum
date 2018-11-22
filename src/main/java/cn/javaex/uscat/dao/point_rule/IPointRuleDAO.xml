@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.point_rule.IPointRuleDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="PointRuleMap" type="cn.javaex.uscat.view.PointRule">
+		<result column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="action" property="action" />
+		<result column="cycle" property="cycle" />
+		<result column="reward_num" property="rewardNum" />
+		<result column="extcredits1" property="extcredits1" />
+		<result column="extcredits2" property="extcredits2" />
+		<result column="extcredits3" property="extcredits3" />
+		<result column="extcredits4" property="extcredits4" />
+		<result column="extcredits5" property="extcredits5" />
+		<result column="extcredits6" property="extcredits6" />
+	</resultMap>
+	
+	<!-- 查询积分策略列表 -->
+	<select id="list" resultMap="PointRuleMap">
+		SELECT
+			*
+		FROM
+			point_rule
+		ORDER BY
+			id
+	</select>
+	
+	<!-- 查询某个行为的积分策略 -->
+	<select id="selectByAction" resultMap="PointRuleMap">
+		SELECT
+			*
+		FROM
+			point_rule
+		WHERE
+			action = #{action}
+	</select>
+	
+	<!-- 更新积分策略表 -->
+	<update id="update">
+		UPDATE point_rule
+		<set>
+			<if test="extcredits1!=null">extcredits1=#{extcredits1},</if>
+			<if test="extcredits2!=null">extcredits2=#{extcredits2},</if>
+			<if test="extcredits3!=null">extcredits3=#{extcredits3},</if>
+			<if test="extcredits4!=null">extcredits4=#{extcredits4},</if>
+			<if test="extcredits5!=null">extcredits5=#{extcredits5},</if>
+			<if test="extcredits6!=null">extcredits6=#{extcredits6},</if>
+		</set>
+		WHERE action = #{action}
+	</update>
+</mapper>

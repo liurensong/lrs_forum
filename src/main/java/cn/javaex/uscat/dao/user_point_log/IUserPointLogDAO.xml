@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.user_point_log.IUserPointLogDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="UserPointLogMap" type="cn.javaex.uscat.view.UserPointLog">
+		<result column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="name" property="name" />
+		<result column="extcredits1" property="extcredits1" />
+		<result column="extcredits2" property="extcredits2" />
+		<result column="extcredits3" property="extcredits3" />
+		<result column="extcredits4" property="extcredits4" />
+		<result column="extcredits5" property="extcredits5" />
+		<result column="extcredits6" property="extcredits6" />
+		<result column="time" property="time" />
+	</resultMap>
+	
+	<!-- 查询用户的积分记录 -->
+	<select id="listByUserId" resultMap="UserPointLogMap">
+		SELECT
+			id,
+			name,
+			extcredits1,
+			extcredits2,
+			extcredits3,
+			extcredits4,
+			extcredits5,
+			extcredits6,
+			DATE_FORMAT(time, '%Y-%m-%d %H:%i:%s') AS time
+		FROM
+			user_point_log
+		WHERE
+			user_id = #{userId}
+		ORDER BY
+			time DESC
+	</select>
+
+	<!-- 插入记录 -->
+	<insert id="insert">
+		INSERT INTO user_point_log
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="userId!=null and userId!=''">user_id,</if>
+			<if test="name!=null and name!=''">name,</if>
+			<if test="extcredits1!=null and extcredits1!=''">extcredits1,</if>
+			<if test="extcredits2!=null and extcredits2!=''">extcredits2,</if>
+			<if test="extcredits3!=null and extcredits3!=''">extcredits3,</if>
+			<if test="extcredits4!=null and extcredits4!=''">extcredits4,</if>
+			<if test="extcredits5!=null and extcredits5!=''">extcredits5,</if>
+			<if test="extcredits6!=null and extcredits6!=''">extcredits6,</if>
+			<if test="time!=null and time!=''">time,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="userId!=null and userId!=''">#{userId},</if>
+			<if test="name!=null and name!=''">#{name},</if>
+			<if test="extcredits1!=null and extcredits1!=''">#{extcredits1},</if>
+			<if test="extcredits2!=null and extcredits2!=''">#{extcredits2},</if>
+			<if test="extcredits3!=null and extcredits3!=''">#{extcredits3},</if>
+			<if test="extcredits4!=null and extcredits4!=''">#{extcredits4},</if>
+			<if test="extcredits5!=null and extcredits5!=''">#{extcredits5},</if>
+			<if test="extcredits6!=null and extcredits6!=''">#{extcredits6},</if>
+			<if test="time!=null and time!=''">#{time},</if>
+		</trim>
+	</insert>
+</mapper>

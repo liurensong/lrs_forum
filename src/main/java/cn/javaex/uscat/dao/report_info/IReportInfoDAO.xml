@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.report_info.IReportInfoDAO">
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="ReportInfoMap" type="cn.javaex.uscat.view.ReportInfo">
+		<result column="id" property="id" />
+		<result column="reply_id" property="replyId" />
+		<result column="report_content" property="reportContent" />
+		<result column="report_user_id" property="reportUserId" />
+		<result column="status" property="status" />
+		
+		<result column="tid" property="tid" />
+		<result column="floor" property="floor" />
+		<result column="content_text" property="contentText" />
+		<result column="login_name" property="loginName" />
+	</resultMap>
+	
+	<!-- 查询用户举报记录 -->
+	<select id="list" resultMap="ReportInfoMap">
+		SELECT
+			ri.id,
+			ti.tid,
+			ri.reply_id,
+			ri.report_content,
+			tri.floor,
+			tri.content_text,
+			ui.login_name
+		FROM
+			report_info ri,
+			thread_reply_info tri,
+			thread_info ti,
+			user_info ui
+		WHERE
+			ri.reply_id = tri.id
+		AND tri.tid = ti.tid
+		AND ri.report_user_id = ui.id
+		<choose>
+			<when test="status==null or status=='' or status==0">
+				AND ri.status = '0'
+			</when>
+			<otherwise>
+				AND ri.status = '1'
+			</otherwise>
+		</choose>
+		ORDER BY
+			ri.id DESC
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO report_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="replyId!=null and replyId!=''">reply_id,</if>
+			<if test="reportContent!=null and reportContent!=''">report_content,</if>
+			<if test="reportUserId!=null and reportUserId!=''">report_user_id,</if>
+			<if test="status!=null and status!=''">status,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="replyId!=null and replyId!=''">#{replyId},</if>
+			<if test="reportContent!=null and reportContent!=''">#{reportContent},</if>
+			<if test="reportUserId!=null and reportUserId!=''">#{reportUserId},</if>
+			<if test="status!=null and status!=''">#{status},</if>
+		</trim>
+	</insert>
+	
+	<!-- 根据举报id数组，将举报记录更改为已处理状态 -->
+	<update id="updateStatus1">
+		UPDATE report_info SET status = '1'
+		WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+	
+	<!-- 批量删除举报记录 -->
+	<delete id="batchDeleteReport">
+		DELETE FROM report_info WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

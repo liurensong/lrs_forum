@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.security_info.ISecurityInfoDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="SecurityInfoMap" type="cn.javaex.uscat.view.SecurityInfo">
+		<result column="id" property="id" />
+		<result column="report_time_interval" property="reportTimeInterval" />
+		<result column="is_activate_email" property="isActivateEmail" />
+		<result column="is_upload_avatar" property="isUploadAvatar" />
+	</resultMap>
+	
+	<!-- 根据主键查询频道信息 -->
+	<select id="select" resultMap="SecurityInfoMap">
+		SELECT
+			*
+		FROM
+			security_info
+		WHERE
+			id = '1'
+	</select>
+	
+	<!-- 更新频道 -->
+	<update id="update">
+		UPDATE security_info
+		<set>
+			<if test="reportTimeInterval!=null">report_time_interval=#{reportTimeInterval},</if>
+			<if test="isActivateEmail!=null">is_activate_email=#{isActivateEmail},</if>
+			<if test="isUploadAvatar!=null">is_upload_avatar=#{isUploadAvatar},</if>
+		</set>
+		WHERE id = '1'
+	</update>
+</mapper>

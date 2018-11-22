@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.download_count.IDownloadCountDAO">
+	
+	<!-- 建立sql查询结果接口与实体属性的映射关系 -->
+	<resultMap id="DownloadCountMap" type="cn.javaex.uscat.view.DownloadCount">
+		<result column="id" property="id" />
+		<result column="sort" property="sort" />
+		<result column="name" property="name" />
+		<result column="icon" property="icon" />
+		<result column="remark" property="remark" />
+		<result column="update_time" property="updateTime" />
+		<result column="url" property="url" />
+		<result column="count" property="count" />
+		<result column="is_login" property="isLogin" />
+	</resultMap>
+	
+	<!-- 查询列表 -->
+	<select id="list" resultMap="DownloadCountMap">
+		SELECT
+			id,
+			sort,
+			NAME,
+			icon,
+			remark,
+			DATE_FORMAT(update_time, '%Y-%m-%d') AS update_time,
+			count
+		FROM
+			download_count
+		ORDER BY
+			sort
+	</select>
+	
+	<!-- 根据id查询计数器信息 -->
+	<select id="selectById" resultMap="DownloadCountMap">
+		SELECT
+			*
+		FROM
+			download_count
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 新增 -->
+	<insert id="insert">
+		INSERT INTO download_count
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="sort!=null and sort!=''">sort,</if>
+			<if test="name!=null and name!=''">name,</if>
+			<if test="icon!=null and icon!=''">icon,</if>
+			<if test="remark!=null and remark!=''">remark,</if>
+			<if test="updateTime!=null and updateTime!=''">update_time,</if>
+			<if test="url!=null and url!=''">url,</if>
+			<if test="count!=null and count!=''">count,</if>
+			<if test="isLogin!=null and isLogin!=''">is_login,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="sort!=null and sort!=''">#{sort},</if>
+			<if test="name!=null and name!=''">#{name},</if>
+			<if test="icon!=null and icon!=''">#{icon},</if>
+			<if test="remark!=null and remark!=''">#{remark},</if>
+			<if test="updateTime!=null and updateTime!=''">#{updateTime},</if>
+			<if test="url!=null and url!=''">#{url},</if>
+			<if test="count!=null and count!=''">#{count},</if>
+			<if test="isLogin!=null and isLogin!=''">#{isLogin},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新 -->
+	<update id="update">
+		UPDATE download_count
+		<set>
+			<if test="sort!=null">sort=#{sort},</if>
+			<if test="name!=null">name=#{name},</if>
+			<if test="icon!=null">icon=#{icon},</if>
+			<if test="remark!=null">remark=#{remark},</if>
+			<if test="updateTime!=null">update_time=#{updateTime},</if>
+			<if test="url!=null">url=#{url},</if>
+			<if test="count!=null and count!='' and count!='0'">count=#{count},</if>
+			<if test="isLogin!=null">is_login=#{isLogin},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 删除 -->
+	<delete id="delete">
+		DELETE FROM download_count WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

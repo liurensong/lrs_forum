@@ -1,0 +1,263 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.thread_reply_info.IThreadReplyInfoDAO">
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="ThreadReplyInfoMap" type="cn.javaex.uscat.view.ThreadReplyInfo">
+		<result column="id" property="id" />
+		<result column="tid" property="tid" />
+		<result column="content_html" property="contentHtml" />
+		<result column="content_text" property="contentText" />
+		<result column="reply_time" property="replyTime" />
+		<result column="reply_user_id" property="replyUserId" />
+		<result column="floor" property="floor" />
+		<result column="be_reply_id" property="beReplyId" />
+		<result column="status" property="status" />
+		
+		<result column="login_name" property="loginName" />
+	</resultMap>
+	
+	<!-- 根据主题id，查询帖子回复表中的最新一条记录 -->
+	<select id="selectLastByTid" resultMap="ThreadReplyInfoMap">
+		SELECT
+			DATE_FORMAT(tri.reply_time, '%Y-%m-%d %H:%i:%s') AS reply_time,
+			tri.reply_user_id,
+			ui.login_name
+		FROM
+			thread_reply_info tri,
+			user_info ui
+		WHERE
+			tri.reply_user_id = ui.id
+		AND tri.tid = #{tid}
+		ORDER BY
+			tri.id DESC
+		LIMIT 1
+	</select>
+	
+	<!-- 根据主题id，获取帖子的回复数 -->
+	<select id="countReplyByTid" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			thread_reply_info
+		WHERE
+			tid = #{tid}
+		AND floor != '1'
+	</select>
+	
+	<!-- 根据主题id，查询帖子回复内容 -->
+	<select id="listByTid" resultMap="ThreadReplyInfoMap">
+		SELECT
+			id,
+			DATE_FORMAT(reply_time, '%Y-%m-%d %H:%i:%s') AS reply_time,
+			reply_user_id,
+			content_html,
+			content_text,
+			floor,
+			be_reply_id,
+			status
+		FROM
+			thread_reply_info
+		WHERE
+			tid = #{tid}
+		ORDER BY
+			id
+	</select>
+	
+	<!-- 查询当前帖子目前最新的楼层 -->
+	<select id="selectLastFloorByTid" resultType="int">
+		SELECT
+			MAX(floor)
+		FROM
+			thread_reply_info
+		WHERE
+			tid = #{tid}
+	</select>
+	
+	<!-- 根据帖子回复表的主键，查询当前楼层的回复内容 -->
+	<select id="selectById" resultMap="ThreadReplyInfoMap">
+		SELECT
+			tri.id,
+			DATE_FORMAT(tri.reply_time, '%Y-%m-%d %H:%i:%s') AS reply_time,
+			tri.content_html,
+			tri.content_text,
+			tri.floor,
+			tri.reply_user_id,
+			ui.login_name
+		FROM
+			thread_reply_info tri,
+			user_info ui
+		WHERE
+			tri.reply_user_id = ui.id
+		AND tri.id = #{id}
+	</select>
+	
+	<!-- 根据用户id，查询用户的回帖数 -->
+	<select id="countByReplyUserId" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			thread_reply_info
+		WHERE
+			reply_user_id = #{replyUserId}
+		AND floor != '1'
+	</select>
+	
+	<!-- 根据主题id，查询帖子回复表中的第一条记录（即主题摘要） -->
+	<select id="selectPostContentByTid" resultType="String">
+		SELECT
+			content_text
+		FROM
+			thread_reply_info
+		WHERE
+			tid = #{tid}
+		AND floor = '1'
+	</select>
+	
+	<!-- 查询用户上次发帖的时间 -->
+	<select id="selectLastReplyTimeByReplyUserId" resultType="String">
+		SELECT
+			DATE_FORMAT(MAX(reply_time), '%Y-%m-%d %H:%i:%s') AS reply_time
+		FROM
+			thread_reply_info
+		WHERE
+			reply_user_id = #{replyUserId}
+	</select>
+	
+	<!-- 根据举报记录的id数组，查询帖子回复表的list集合 -->
+	<select id="listByReportIdArr" resultMap="ThreadReplyInfoMap">
+		SELECT DISTINCT
+			tri.id,
+			tri.floor,
+			tri.tid
+		FROM
+			thread_reply_info tri,
+			report_info ri
+		WHERE
+			tri.id = ri.reply_id
+		AND ri.id IN
+		<foreach collection="reportIdArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	
+	<!-- 查询回收站的回帖 -->
+	<select id="listRecycle" resultType="hashmap">
+		SELECT
+			bi.fid,
+			bi.name AS board_name,
+			ti.tid,
+			ti.title,
+			tri.id,
+			tri.content_text,
+			DATE_FORMAT(tri.reply_time, '%Y-%m-%d %H:%i:%s') AS reply_time,
+			ui.login_name
+		FROM
+			thread_reply_info tri,
+			thread_info ti,
+			board_info bi,
+			user_info ui
+		WHERE
+			tri.tid = ti.tid
+		AND ti.fid = bi.fid
+		AND tri.reply_user_id = ui.id
+		AND tri.status = '2'
+	</select>
+	
+	<!-- 查询回收站的帖子（高效查询） -->
+	<select id="listRecycle2" resultMap="ThreadReplyInfoMap">
+		SELECT
+			id,
+			reply_user_id
+		FROM
+			thread_reply_info
+		WHERE
+			status = '2'
+	</select>
+	
+	<!-- 根据回帖id，查询该帖所在版块 -->
+	<select id="selectFidById" resultType="String">
+		SELECT
+			ti.fid
+		FROM
+			thread_info ti,
+			thread_reply_info tri
+		WHERE
+			ti.tid = tri.tid
+		AND tri.id = #{id}
+	</select>
+	
+	<!-- 根据主题id，回帖人id,查询帖子回复表中的所有记录 -->
+	<select id="listByTidAndReplyUserId" resultMap="ThreadReplyInfoMap">
+		SELECT
+			content_text
+		FROM
+			thread_reply_info
+		WHERE
+			reply_user_id = #{replyUserId}
+		AND status = '1'
+	</select>
+	
+	<!-- 插入新的回复 -->
+	<insert id="insert">
+		INSERT INTO thread_reply_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="tid!=null and tid!=''">tid,</if>
+			<if test="contentHtml!=null and contentHtml!=''">content_html,</if>
+			<if test="contentText!=null and contentText!=''">content_text,</if>
+			<if test="replyTime!=null and replyTime!=''">reply_time,</if>
+			<if test="replyUserId!=null and replyUserId!=''">reply_user_id,</if>
+			<if test="floor!=null and floor!=''">floor,</if>
+			<if test="beReplyId!=null and beReplyId!=''">be_reply_id,</if>
+			<if test="status!=null and status!=''">status,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="tid!=null and tid!=''">#{tid},</if>
+			<if test="contentHtml!=null and contentHtml!=''">#{contentHtml},</if>
+			<if test="contentText!=null and contentText!=''">#{contentText},</if>
+			<if test="replyTime!=null and replyTime!=''">#{replyTime},</if>
+			<if test="replyUserId!=null and replyUserId!=''">#{replyUserId},</if>
+			<if test="floor!=null and floor!=''">#{floor},</if>
+			<if test="beReplyId!=null and beReplyId!=''">#{beReplyId},</if>
+			<if test="status!=null and status!=''">#{status},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新回帖 -->
+	<update id="update">
+		UPDATE thread_reply_info
+		<set>
+			<if test="contentHtml!=null">content_html=#{contentHtml},</if>
+			<if test="contentText!=null">content_text=#{contentText},</if>
+			<if test="status!=null">status=#{status},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 删除用户的回帖记录 -->
+	<delete id="deleteByUserIdArr">
+		DELETE FROM thread_reply_info WHERE reply_user_id IN
+		<foreach collection="userIdArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 根据主题主键数组，删除回帖记录 -->
+	<delete id="deleteByTidArr">
+		DELETE FROM thread_reply_info WHERE tid IN
+		<foreach collection="tidArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 根据主键，删除回帖记录 -->
+	<delete id="deleteById">
+		DELETE FROM thread_reply_info WHERE id = #{id}
+	</delete>
+	
+	<!-- 删除所有回收站的帖子 -->
+	<delete id="deleteStatus2">
+		DELETE FROM thread_reply_info WHERE status = '2'
+	</delete>
+</mapper>

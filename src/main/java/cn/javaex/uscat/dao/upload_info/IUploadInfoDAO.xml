@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.upload_info.IUploadInfoDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="UploadInfoMap" type="cn.javaex.uscat.view.UploadInfo">
+		<result column="id" property="id" />
+		<result column="type" property="type" />
+		<result column="domain" property="domain" />
+		<result column="ak" property="ak" />
+		<result column="sk" property="sk" />
+		<result column="bucket" property="bucket" />
+		<result column="compress" property="compress" />
+	</resultMap>
+
+	<!-- 根据主键查询板块信息 -->
+	<select id="selectByType" resultMap="UploadInfoMap">
+		SELECT
+			*
+		FROM
+			upload_info
+		WHERE
+			type = #{type}
+	</select>
+	
+	<!-- 更新上传设置 -->
+	<update id="update">
+		UPDATE upload_info
+		<set>
+			<if test="domain!=null">domain=#{domain},</if>
+			<if test="ak!=null">ak=#{ak},</if>
+			<if test="sk!=null">sk=#{sk},</if>
+			<if test="bucket!=null">bucket=#{bucket},</if>
+			<if test="compress!=null">compress=#{compress},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+</mapper>

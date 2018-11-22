@@ -1,0 +1,143 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.group_info.IGroupInfoDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="GroupInfoMap" type="cn.javaex.uscat.view.GroupInfo">
+		<result column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="type" property="type" />
+		<result column="point" property="point" />
+	</resultMap>
+	
+	<!-- 查询用户组列表 -->
+	<select id="list" resultMap="GroupInfoMap">
+		SELECT
+			*
+		FROM
+			group_info
+		ORDER BY
+			id
+	</select>
+	
+	<!-- 根据最低积分，查询用户组信息 -->
+	<select id="selectByPoint" resultMap="GroupInfoMap">
+		SELECT
+			*
+		FROM
+			group_info
+		WHERE
+			type = 'user'
+		AND point > #{point}
+		ORDER BY
+			point
+		LIMIT 1
+	</select>
+	
+	<!-- 查询用户组列表 -->
+	<select id="listByType" resultMap="GroupInfoMap">
+		SELECT
+			*
+		FROM
+			group_info
+		WHERE
+			type = #{type}
+		ORDER BY
+			point, id
+	</select>
+	
+	<!-- 查询板块权限设定所需的用户组 -->
+	<select id="listByPermSetting" resultMap="GroupInfoMap">
+		SELECT
+			*
+		FROM
+			group_info
+		WHERE
+			type = 'user' OR type = 'visitor'
+		ORDER BY
+			point, id
+	</select>
+	
+	<!-- 查询用户组名的数量，用于校验名字重复 -->
+	<select id="countByName" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			group_info
+		WHERE
+			name = #{name}
+		<if test="id!=null and id!=''">AND id != #{id}</if>
+	</select>
+	
+	<!-- 查询会员用户组积分的数量，用于校验积分重复 -->
+	<select id="countByPoint" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			group_info
+		WHERE
+			type = 'user'
+		AND point = #{point}
+		<if test="id!=null and id!=''">AND id != #{id}</if>
+	</select>
+	
+	<!-- 根据最低积分查询用户组id -->
+	<select id="selectGroupIdByPoint" resultType="String">
+		SELECT
+			id
+		FROM
+			group_info
+		WHERE
+			type = 'user'
+		AND point >= #{point}
+		ORDER BY
+			point
+		LIMIT 1
+	</select>
+	
+	<!-- 根据用户组名称和类型，查询用户组id -->
+	<select id="selectGroupIdByNameAndType" resultType="String">
+		SELECT
+			id
+		FROM
+			group_info
+		WHERE
+			type = #{type}
+		AND name = #{name}
+	</select>
+	
+	<!-- 插入新的用户组 -->
+	<insert id="insert">
+		INSERT INTO group_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="name!=null and name!=''">name,</if>
+			<if test="type!=null and type!=''">type,</if>
+			<if test="point!=null and point!=''">point,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="name!=null and name!=''">#{name},</if>
+			<if test="type!=null and type!=''">#{type},</if>
+			<if test="point!=null and point!=''">#{point},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新用户组 -->
+	<update id="update">
+		UPDATE group_info
+		<set>
+			<if test="name!=null">name=#{name},</if>
+			<if test="point!=null">point=#{point},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 删除用户组 -->
+	<delete id="delete">
+		DELETE FROM group_info WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

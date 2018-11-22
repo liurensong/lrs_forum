@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.user_count.IUserCountDAO">
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="UserCountMap" type="cn.javaex.uscat.view.UserCount">
+		<result column="id" property="id" />
+		<result column="user_id" property="userId" />
+		<result column="extcredits1" property="extcredits1" />
+		<result column="extcredits2" property="extcredits2" />
+		<result column="extcredits3" property="extcredits3" />
+		<result column="extcredits4" property="extcredits4" />
+		<result column="extcredits5" property="extcredits5" />
+		<result column="extcredits6" property="extcredits6" />
+		<result column="posts" property="posts" />
+		<result column="threads" property="threads" />
+		<result column="digestposts" property="digestposts" />
+	</resultMap>
+	
+	<!-- 根据用户id，查询用户积分记录数据 -->
+	<select id="selectByUserId" resultMap="UserCountMap">
+		SELECT
+			*
+		FROM
+			user_count
+		WHERE
+			user_id = #{userId}
+	</select>
+	
+	<!-- 插入 -->
+	<insert id="insert">
+		INSERT INTO user_count
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="userId!=null and userId!=''">user_id,</if>
+			<if test="extcredits1!=null and extcredits1!=''">extcredits1,</if>
+			<if test="extcredits2!=null and extcredits2!=''">extcredits2,</if>
+			<if test="extcredits3!=null and extcredits3!=''">extcredits3,</if>
+			<if test="extcredits4!=null and extcredits4!=''">extcredits4,</if>
+			<if test="extcredits5!=null and extcredits5!=''">extcredits5,</if>
+			<if test="extcredits6!=null and extcredits6!=''">extcredits6,</if>
+			<if test="posts!=null and posts!=''">posts,</if>
+			<if test="threads!=null and threads!=''">threads,</if>
+			<if test="digestposts!=null and digestposts!=''">digestposts,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="userId!=null and userId!=''">#{userId},</if>
+			<if test="extcredits1!=null and extcredits1!=''">#{extcredits1},</if>
+			<if test="extcredits2!=null and extcredits2!=''">#{extcredits2},</if>
+			<if test="extcredits3!=null and extcredits3!=''">#{extcredits3},</if>
+			<if test="extcredits4!=null and extcredits4!=''">#{extcredits4},</if>
+			<if test="extcredits5!=null and extcredits5!=''">#{extcredits5},</if>
+			<if test="extcredits6!=null and extcredits6!=''">#{extcredits6},</if>
+			<if test="posts!=null and posts!=''">#{posts},</if>
+			<if test="threads!=null and threads!=''">#{threads},</if>
+			<if test="digestposts!=null and digestposts!=''">#{digestposts},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新 -->
+	<update id="update">
+		UPDATE user_count
+		<set>
+			<if test="extcredits1!=null">extcredits1=#{extcredits1},</if>
+			<if test="extcredits2!=null">extcredits2=#{extcredits2},</if>
+			<if test="extcredits3!=null">extcredits3=#{extcredits3},</if>
+			<if test="extcredits4!=null">extcredits4=#{extcredits4},</if>
+			<if test="extcredits5!=null">extcredits5=#{extcredits5},</if>
+			<if test="extcredits6!=null">extcredits6=#{extcredits6},</if>
+			<if test="posts!=null">posts=#{posts},</if>
+			<if test="threads!=null">threads=#{threads},</if>
+			<if test="digestposts!=null">digestposts=#{digestposts},</if>
+		</set>
+		WHERE user_id = #{userId}
+	</update>
+	
+	<!-- 清空用户积分、帖子数等信息记录表 -->
+	<update id="clearByUserIdArr">
+		UPDATE user_count
+		SET extcredits1 = '0',
+			extcredits2 = '0',
+			extcredits3 = '0',
+			extcredits4 = '0',
+			extcredits5 = '0',
+			extcredits6 = '0',
+			posts = '0',
+			threads = '0',
+			digestposts = '0'
+		WHERE user_id IN
+		<foreach collection="userIdArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+</mapper>

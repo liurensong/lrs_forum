@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.zone_moderator.IZoneModeratorDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="ZoneModeratorMap" type="cn.javaex.uscat.view.ZoneModerator">
+		<result column="id" property="id" />
+		<result column="gid" property="gid" />
+		<result column="user_id" property="userId" />
+		
+		<result column="login_name" property="loginName" />
+		<result column="avatar" property="avatar" />
+	</resultMap>
+	
+	<!-- 查询分区下的超级版主 -->
+	<select id="listByGid" resultMap="ZoneModeratorMap">
+		SELECT
+			zm.id,
+			zm.user_id,
+			ui.login_name,
+			upi.avatar
+		FROM
+			zone_moderator zm,
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			zm.user_id = ui.id
+		AND ui.id = upi.user_id
+		AND zm.gid = #{gid}
+		ORDER BY
+			zm.id
+	</select>
+	
+	<!-- 根据分区id、用户id，查询是否已有重复数据 -->
+	<select id="countByGidAndUserId" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			zone_moderator
+		WHERE
+			gid = #{gid}
+		<if test="userId!=null and userId!=''">
+			AND user_id = #{userId}
+		</if>
+	</select>
+	
+	<!-- 根据主键id，查询超级版主记录 -->
+	<select id="selectById" resultMap="ZoneModeratorMap">
+		SELECT
+			*
+		FROM
+			zone_moderator
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 插入 -->
+	<insert id="insert">
+		INSERT INTO zone_moderator
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="gid!=null and gid!=''">gid,</if>
+			<if test="userId!=null and userId!=''">user_id,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="gid!=null and gid!=''">#{gid},</if>
+			<if test="userId!=null and userId!=''">#{userId},</if>
+		</trim>
+	</insert>
+	
+	<!-- 删除当前分区下的所有数据 -->
+	<delete id="deleteByGid">
+		DELETE FROM zone_moderator WHERE gid = #{gid}
+	</delete>
+	
+	<!-- 批量删除超级版主 -->
+	<delete id="delete">
+		DELETE FROM zone_moderator WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

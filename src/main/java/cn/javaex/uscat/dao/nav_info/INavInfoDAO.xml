@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.nav_info.INavInfoDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="NavInfoMap" type="cn.javaex.uscat.view.NavInfo">
+		<result column="id" property="id" />
+		<result column="sort" property="sort" />
+		<result column="name" property="name" />
+		<result column="link" property="link" />
+		<result column="type" property="type" />
+		<result column="is_index" property="isIndex" />
+		<result column="is_use" property="isUse" />
+		<result column="channel_id" property="channelId" />
+		<result column="is_download_count" property="isDownloadCount" />
+	</resultMap>
+	
+	<!-- 查询网站首页链接 -->
+	<select id="selectIndexLink" resultType="String">
+		SELECT
+			link
+		FROM
+			nav_info
+		WHERE
+			is_index = '1'
+	</select>
+	
+	<!-- 查询导航列表 -->
+	<select id="list" resultMap="NavInfoMap">
+		SELECT
+			*
+		FROM
+			nav_info
+		ORDER BY
+			sort
+	</select>
+
+	<!-- 可用导航列表 -->
+	<select id="listIsUse" resultMap="NavInfoMap">
+		SELECT
+			*
+		FROM
+			nav_info
+		WHERE
+			is_use = '1'
+		ORDER BY
+			sort
+	</select>
+	
+	<!-- 查询自定义页面导航信息 -->
+	<select id="selectByChannelId" resultMap="NavInfoMap">
+		SELECT
+			*
+		FROM
+			nav_info
+		WHERE
+			channel_id = #{channelId}
+	</select>
+	
+	<!-- 插入新的导航 -->
+	<insert id="insert">
+		INSERT INTO nav_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="sort!=null and sort!=''">sort,</if>
+			<if test="name!=null and name!=''">name,</if>
+			<if test="link!=null and link!=''">link,</if>
+			<if test="type!=null and type!=''">type,</if>
+			<if test="isIndex!=null and isIndex!=''">is_index,</if>
+			<if test="isUse!=null and isUse!=''">is_use,</if>
+			<if test="channelId!=null and channelId!=''">channel_id,</if>
+			<if test="isDownloadCount!=null and isDownloadCount!=''">is_download_count,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="sort!=null and sort!=''">#{sort},</if>
+			<if test="name!=null and name!=''">#{name},</if>
+			<if test="link!=null and link!=''">#{link},</if>
+			<if test="type!=null and type!=''">#{type},</if>
+			<if test="isIndex!=null and isIndex!=''">#{isIndex},</if>
+			<if test="isUse!=null and isUse!=''">#{isUse},</if>
+			<if test="channelId!=null and channelId!=''">#{channelId},</if>
+			<if test="isDownloadCount!=null and isDownloadCount!=''">#{isDownloadCount},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新导航 -->
+	<update id="update">
+		UPDATE nav_info
+		<set>
+			<if test="sort!=null">sort=#{sort},</if>
+			<if test="name!=null">name=#{name},</if>
+			<if test="link!=null">link=#{link},</if>
+			<if test="type!=null">type=#{type},</if>
+			<if test="isIndex!=null">is_index=#{isIndex},</if>
+			<if test="isUse!=null">is_use=#{isUse},</if>
+			<if test="channelId!=null">channel_id=#{channelId},</if>
+			<if test="isDownloadCount!=null">is_download_count=#{isDownloadCount},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+
+	<!-- 频道编辑时，同步更新导航 -->
+	<update id="updateByChannel">
+		UPDATE nav_info
+		<set>
+			<if test="name!=null">name=#{name},</if>
+		</set>
+		WHERE
+			type = 'system'
+		AND channel_id = #{channelId}
+	</update>
+
+	<!-- 批量删除导航 -->
+	<delete id="delete">
+		DELETE FROM nav_info WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+	
+	<!-- 根据链接删除导航 -->
+	<delete id="deleteByChannelId">
+		DELETE FROM nav_info WHERE channel_id = #{channelId}
+	</delete>
+</mapper>

@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.api_info.IApiInfoDAO">
+	<cache/>
+	
+	<!-- 建立sql查询结果接口与实体属性的映射关系 -->
+	<resultMap id="ApiInfoMap" type="cn.javaex.uscat.view.ApiInfo">
+		<result column="id" property="id" />
+		<result column="name" property="name" />
+		<result column="sort" property="sort" />
+		<result column="type" property="type" />
+		<result column="fid" property="fid" />
+		<result column="order_field" property="orderField" />
+		<result column="cycle" property="cycle" />
+		<result column="num" property="num" />
+		<result column="cache_time" property="cacheTime" />
+	</resultMap>
+	
+	<!-- 查询指定类型的接口列表 -->
+	<select id="listByType" resultMap="ApiInfoMap">
+		SELECT
+			*
+		FROM
+			api_info
+		WHERE
+			type = #{type}
+		ORDER BY
+			sort
+	</select>
+	
+	<!-- 根据接口id，查询该接口的信息 -->
+	<select id="selectById" resultMap="ApiInfoMap">
+		SELECT
+			*
+		FROM
+			api_info
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 插入新的接口 -->
+	<insert id="insert">
+		INSERT INTO api_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="name!=null and name!=''">name,</if>
+			<if test="sort!=null and sort!=''">sort,</if>
+			<if test="type!=null and type!=''">type,</if>
+			<if test="fid!=null and fid!=''">fid,</if>
+			<if test="orderField!=null and orderField!=''">order_field,</if>
+			<if test="cycle!=null and cycle!=''">cycle,</if>
+			<if test="num!=null and num!=''">num,</if>
+			<if test="cacheTime!=null and cacheTime!=''">cache_time,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="name!=null and name!=''">#{name},</if>
+			<if test="sort!=null and sort!=''">#{sort},</if>
+			<if test="type!=null and type!=''">#{type},</if>
+			<if test="fid!=null and fid!=''">#{fid},</if>
+			<if test="orderField!=null and orderField!=''">#{orderField},</if>
+			<if test="cycle!=null and cycle!=''">#{cycle},</if>
+			<if test="num!=null and num!=''">#{num},</if>
+			<if test="cacheTime!=null and cacheTime!=''">#{cacheTime},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新接口 -->
+	<update id="update">
+		UPDATE api_info
+		<set>
+			<if test="name!=null">name=#{name},</if>
+			<if test="sort!=null">sort=#{sort},</if>
+			<if test="type!=null">type=#{type},</if>
+			<if test="fid!=null">fid=#{fid},</if>
+			<if test="orderField!=null">order_field=#{orderField},</if>
+			<if test="cycle!=null">cycle=#{cycle},</if>
+			<if test="num!=null">num=#{num},</if>
+			<if test="cacheTime!=null">cache_time=#{cacheTime},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 删除接口 -->
+	<delete id="delete">
+		DELETE FROM api_info WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+</mapper>

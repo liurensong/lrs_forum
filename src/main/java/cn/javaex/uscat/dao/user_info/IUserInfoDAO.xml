@@ -1,0 +1,241 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.user_info.IUserInfoDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="UserInfoMap" type="cn.javaex.uscat.view.UserInfo">
+		<result column="id" property="id" />
+		<result column="login_name" property="loginName" />
+		<result column="password" property="password" />
+		<result column="email" property="email" />
+		<result column="is_email_checked" property="isEmailChecked" />
+		<result column="register_time" property="registerTime" />
+		<result column="register_ip" property="registerIp" />
+		<result column="last_login_time" property="lastLoginTime" />
+		<result column="last_login_ip" property="lastLoginIp" />
+		<result column="status" property="status" />
+		
+		<result column="avatar" property="avatar" />
+		<result column="group_id" property="groupId" />
+		<result column="group_name" property="groupName" />
+		<result column="group_type" property="groupType" />
+	</resultMap>
+	
+	<!-- 根据旧密码和邮箱，判断查询用户 -->
+	<select id="selectByPasswordAndEmail" resultMap="UserInfoMap">
+		SELECT
+			*
+		FROM
+			user_info
+		WHERE
+			password = #{password}
+		AND email = #{email}
+	</select>
+	
+	<!-- 查询用户数量 -->
+	<select id="countUser" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			user_info
+		WHERE
+			1 = 1
+		<if test="loginName!=null and loginName!=''">AND login_name=#{loginName}</if>
+		<if test="email!=null and email!=''">AND email=#{email}</if>
+	</select>
+	
+	<!-- 查询用户 -->
+	<select id="selectUser" resultMap="UserInfoMap">
+		SELECT
+			ui.id,
+			ui.login_name,
+			ui.email,
+			ui.is_email_checked,
+			DATE_FORMAT(ui.register_time, '%Y-%m-%d %H:%i:%s') AS register_time,
+			ui.register_ip,
+			DATE_FORMAT(ui.last_login_time, '%Y-%m-%d %H:%i:%s') AS last_login_time,
+			ui.last_login_ip,
+			ui.status,
+			upi.avatar,
+			upi.group_id,
+			gi.name AS group_name,
+			gi.type AS group_type
+		FROM
+			user_info ui,
+			user_profile_info upi,
+			group_info gi
+		WHERE
+			ui.id = upi.user_id
+		AND upi.group_id = gi.id
+		AND ui.login_name = #{loginName}
+		AND ui.password = #{password}
+	</select>
+	
+	<!-- 通过id查询用户信息，用于帖子内容页显示用户信息 -->
+	<select id="selectUserInfoById" resultMap="UserInfoMap">
+		SELECT
+			ui.id,
+			ui.login_name,
+			ui.email,
+			ui.is_email_checked,
+			DATE_FORMAT(ui.register_time, '%Y-%m-%d %H:%i:%s') AS register_time,
+			ui.register_ip,
+			DATE_FORMAT(ui.last_login_time, '%Y-%m-%d %H:%i:%s') AS last_login_time,
+			ui.last_login_ip,
+			ui.status,
+			upi.avatar,
+			gi.name AS group_name
+		FROM
+			user_info ui,
+			user_profile_info upi,
+			group_info gi
+		WHERE
+			ui.id = upi.user_id
+		AND upi.group_id = gi.id
+		AND ui.id = #{id}
+	</select>
+	
+	<!-- 根据邮箱查询用户 -->
+	<select id="selectUserByEmail" resultMap="UserInfoMap">
+		SELECT
+			id,
+			login_name,
+			email
+		FROM
+			user_info
+		WHERE
+			email = #{email}
+		LIMIT 1
+	</select>
+	
+	<!-- 根据用户id，查询用户的激活状态 -->
+	<select id="selectUserStatusById" resultType="String">
+		SELECT
+			status
+		FROM
+			user_info
+		WHERE
+			id = #{id}
+	</select>
+	
+	<!-- 根据用户名，查询用户id -->
+	<select id="selectUserIdByLoginName" resultType="String">
+		SELECT
+			id
+		FROM
+			user_info
+		WHERE
+			login_name = #{loginName}
+		LIMIT 1
+	</select>
+	
+	<!-- 根据用户不同状态，查询所有用户信息 -->
+	<select id="list" resultMap="UserInfoMap">
+		SELECT
+			ui.id,
+			ui.login_name,
+			ui.email,
+			ui.is_email_checked,
+			DATE_FORMAT(ui.register_time, '%Y-%m-%d %H:%i:%s') AS register_time,
+			upi.avatar,
+			gi.name AS group_name
+		FROM
+			user_info ui,
+			user_profile_info upi,
+			group_info gi
+		WHERE
+			ui.status = #{status}
+		AND ui.id = upi.user_id
+		AND upi.group_id = gi.id
+		<if test="groupId!=null and groupId!=''">
+			AND gi.id = #{groupId}
+		</if>
+		<if test="keyword!=null and keyword!=''">
+			AND ui.login_name LIKE CONCAT('%', #{keyword}, '%')
+		</if>
+		ORDER BY
+			ui.register_time DESC
+	</select>
+	
+	<!-- 根据主键查询用户信息（后台管理专用） -->
+	<select id="selectById" resultMap="UserInfoMap">
+		SELECT
+			ui.id,
+			ui.login_name,
+			ui.password,
+			ui.email,
+			DATE_FORMAT(ui.register_time, '%Y-%m-%d %H:%i:%s') AS register_time,
+			ui.register_ip,
+			DATE_FORMAT(ui.last_login_time, '%Y-%m-%d %H:%i:%s') AS last_login_time,
+			ui.last_login_ip,
+			upi.avatar,
+			upi.group_id
+		FROM
+			user_info ui,
+			user_profile_info upi
+		WHERE
+			ui.id = upi.user_id
+		AND ui.id = #{id}
+	</select>
+	
+	<!-- 注册新用户 -->
+	<insert id="insert">
+		INSERT INTO user_info
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="loginName!=null and loginName!=''">login_name,</if>
+			<if test="password!=null and password!=''">password,</if>
+			<if test="email!=null and email!=''">email,</if>
+			<if test="isEmailChecked!=null and isEmailChecked!=''">is_email_checked,</if>
+			<if test="registerTime!=null and registerTime!=''">register_time,</if>
+			<if test="registerIp!=null and registerIp!=''">register_ip,</if>
+			<if test="lastLoginTime!=null and lastLoginTime!=''">last_login_time,</if>
+			<if test="lastLoginIp!=null and lastLoginIp!=''">last_login_ip,</if>
+			<if test="status!=null and status!=''">status,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="loginName!=null and loginName!=''">#{loginName},</if>
+			<if test="password!=null and password!=''">#{password},</if>
+			<if test="email!=null and email!=''">#{email},</if>
+			<if test="isEmailChecked!=null and isEmailChecked!=''">#{isEmailChecked},</if>
+			<if test="registerTime!=null and registerTime!=''">#{registerTime},</if>
+			<if test="registerIp!=null and registerIp!=''">#{registerIp},</if>
+			<if test="lastLoginTime!=null and lastLoginTime!=''">#{lastLoginTime},</if>
+			<if test="lastLoginIp!=null and lastLoginIp!=''">#{lastLoginIp},</if>
+			<if test="status!=null and status!=''">#{status},</if>
+		</trim>
+		<selectKey keyProperty="id" resultType="String">
+			<!-- 得到刚insert到数据表中的记录的主键值，只适用于自增主键 -->
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+	</insert>
+	
+	<!-- 更新用户信息 -->
+	<update id="update">
+		UPDATE user_info
+		<set>
+			<if test="password!=null and password!=''">password=#{password},</if>
+			<if test="email!=null">email=#{email},</if>
+			<if test="isEmailChecked!=null">is_email_checked=#{isEmailChecked},</if>
+			<if test="registerTime!=null">register_time=#{registerTime},</if>
+			<if test="registerIp!=null">register_ip=#{registerIp},</if>
+			<if test="lastLoginTime!=null">last_login_time=#{lastLoginTime},</if>
+			<if test="lastLoginIp!=null">last_login_ip=#{lastLoginIp},</if>
+			<if test="status!=null">status=#{status},</if>
+		</set>
+		WHERE id = #{id}
+	</update>
+	
+	<!-- 批量更新用户 -->
+	<update id="batchUpdate">
+		UPDATE user_info 
+		<set>
+			<if test="status!=null">status=#{status},</if>
+		</set>
+		WHERE id IN
+		<foreach collection="idArr" index="index" item="item" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+</mapper>

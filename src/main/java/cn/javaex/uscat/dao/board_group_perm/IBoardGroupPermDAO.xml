@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="cn.javaex.uscat.dao.board_group_perm.IBoardGroupPermDAO">
+	
+	<!-- 建立sql查询结果字段与实体属性的映射关系 -->
+	<resultMap id="BoardGroupPermMap" type="cn.javaex.uscat.view.BoardGroupPerm">
+		<result column="id" property="id" />
+		<result column="fid" property="fid" />
+		<result column="group_id" property="groupId" />
+		<result column="is_view_board" property="isViewBoard" />
+		<result column="is_post" property="isPost" />
+		<result column="is_reply" property="isReply" />
+		<result column="is_download_attachment" property="isDownloadAttachment" />
+		<result column="is_upload_attachment" property="isUploadAttachment" />
+	</resultMap>
+	
+	<!-- 根据板块id和会员用户组id，查询记录数 -->
+	<select id="countByFidAndGroupId" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM
+			board_group_perm
+		WHERE
+			fid = #{fid}
+		AND group_id = #{groupId}
+	</select>
+	
+	<!-- 根据板块id，用户组id，查询每个用户组对板块的权限设置 -->
+	<select id="selectByFidAndGroupId" resultMap="BoardGroupPermMap">
+		SELECT
+			*
+		FROM
+			board_group_perm
+		WHERE
+			fid = #{fid}
+		AND group_id = #{groupId}
+	</select>
+	
+	<!-- 查询权限 -->
+	<select id="selectByFidAndGroupIdAndType" resultType="String">
+		SELECT
+			${type}
+		FROM
+			board_group_perm
+		WHERE
+			fid = #{fid}
+		AND group_id = #{groupId}
+	</select>
+	
+	<!-- 插入新的权限规则 -->
+	<insert id="insert">
+		INSERT INTO board_group_perm
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">fid,</if>
+			<if test="groupId!=null and groupId!=''">group_id,</if>
+			<if test="isViewBoard!=null and isViewBoard!=''">is_view_board,</if>
+			<if test="isPost!=null and isPost!=''">is_post,</if>
+			<if test="isReply!=null and isReply!=''">is_reply,</if>
+			<if test="isDownloadAttachment!=null and isDownloadAttachment!=''">is_download_attachment,</if>
+			<if test="isUploadAttachment!=null and isUploadAttachment!=''">is_upload_attachment,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="fid!=null and fid!=''">#{fid},</if>
+			<if test="groupId!=null and groupId!=''">#{groupId},</if>
+			<if test="isViewBoard!=null and isViewBoard!=''">#{isViewBoard},</if>
+			<if test="isPost!=null and isPost!=''">#{isPost},</if>
+			<if test="isReply!=null and isReply!=''">#{isReply},</if>
+			<if test="isDownloadAttachment!=null and isDownloadAttachment!=''">#{isDownloadAttachment},</if>
+			<if test="isUploadAttachment!=null and isUploadAttachment!=''">#{isUploadAttachment},</if>
+		</trim>
+	</insert>
+	
+	<!-- 更新权限规则 -->
+	<update id="update">
+		UPDATE board_group_perm
+		<set>
+			<if test="fid!=null">fid=#{fid},</if>
+			<if test="groupId!=null">group_id=#{groupId},</if>
+			<if test="isViewBoard!=null">is_view_board=#{isViewBoard},</if>
+			<if test="isPost!=null">is_post=#{isPost},</if>
+			<if test="isReply!=null">is_reply=#{isReply},</if>
+			<if test="isDownloadAttachment!=null">is_download_attachment=#{isDownloadAttachment},</if>
+			<if test="isUploadAttachment!=null">is_upload_attachment=#{isUploadAttachment},</if>
+		</set>
+		WHERE
+			fid = #{fid}
+		AND group_id = #{groupId}
+	</update>
+</mapper>
